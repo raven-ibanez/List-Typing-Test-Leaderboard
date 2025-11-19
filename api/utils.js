@@ -3,7 +3,9 @@ const fs = require('fs').promises;
 const path = require('path');
 
 // For Vercel, we'll use Vercel KV (Redis) if available, otherwise fallback to in-memory storage
-// Note: In-memory storage will reset on each deployment
+// ⚠️ WARNING: In-memory storage in serverless functions is NOT reliable!
+// Each function invocation may use a different instance, so data won't persist.
+// You MUST set up Vercel KV for data to persist properly.
 let memoryStore = { scores: [] };
 
 // Initialize Vercel KV if available
@@ -34,6 +36,7 @@ async function readLeaderboard() {
   if (kv) {
     try {
       const data = await kv.get('leaderboard');
+      console.log('Data read from Vercel KV');
       return data || { scores: [] };
     } catch (error) {
       console.error('KV read error:', error);
@@ -46,9 +49,11 @@ async function readLeaderboard() {
   try {
     const DATA_FILE = path.join(process.cwd(), 'leaderboard.json');
     const data = await fs.readFile(DATA_FILE, 'utf8');
+    console.log('Data read from file system');
     return JSON.parse(data);
   } catch (error) {
     // File doesn't exist or can't read (normal on Vercel), use memory store
+    console.log('⚠️ Reading from in-memory storage. Current scores:', memoryStore.scores?.length || 0);
     return memoryStore;
   }
 }
@@ -59,6 +64,7 @@ async function writeLeaderboard(data) {
   if (kv) {
     try {
       await kv.set('leaderboard', data);
+      console.log('Data saved to Vercel KV');
       return;
     } catch (error) {
       console.error('KV write error:', error);
@@ -71,10 +77,13 @@ async function writeLeaderboard(data) {
   try {
     const DATA_FILE = path.join(process.cwd(), 'leaderboard.json');
     await fs.writeFile(DATA_FILE, JSON.stringify(data, null, 2));
+    console.log('Data saved to file system');
   } catch (error) {
     // File write fails (normal on Vercel - read-only filesystem), use memory store
     memoryStore = data;
-    console.log('Using memory store (file system not writable)');
+    console.log('⚠️ WARNING: Using in-memory storage. Data may not persist!');
+    console.log('Current memory store:', JSON.stringify(memoryStore));
+    console.log('⚠️ Set up Vercel KV for persistent storage!');
   }
 }
 
