@@ -24,48 +24,51 @@ function verifyAdmin(req) {
 }
 
 module.exports = async (req, res) => {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  // Verify admin
-  const auth = verifyAdmin(req);
-  if (!auth.valid) {
-    return res.status(auth.status).json({ error: auth.error });
-  }
-
-  const { name, wpm, accuracy } = req.body;
-  
-  if (!name || wpm === undefined || accuracy === undefined) {
-    return res.status(400).json({ error: 'Name, WPM, and accuracy are required' });
-  }
-  
   try {
+    // Enable CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end();
+    }
+
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    // Verify admin
+    const auth = verifyAdmin(req);
+    if (!auth.valid) {
+      return res.status(auth.status).json({ error: auth.error });
+    }
+
+    const { name, wpm, accuracy } = req.body || {};
+    
+    if (!name || wpm === undefined || accuracy === undefined) {
+      return res.status(400).json({ error: 'Name, WPM, and accuracy are required' });
+    }
+    
     const data = await readLeaderboard();
+    const scores = Array.isArray(data.scores) ? data.scores : [];
+    
     const newScore = {
       id: Date.now().toString(),
-      name: name.trim(),
+      name: String(name).trim(),
       wpm: parseFloat(wpm),
       accuracy: parseFloat(accuracy),
       date: new Date().toISOString()
     };
     
-    data.scores.push(newScore);
+    scores.push(newScore);
+    data.scores = scores;
     await writeLeaderboard(data);
     
     res.json({ message: 'Score added successfully', score: newScore });
   } catch (error) {
     console.error('Error adding score:', error);
-    res.status(500).json({ error: 'Failed to add score' });
+    res.status(500).json({ error: 'Failed to add score', details: error.message });
   }
 };
 

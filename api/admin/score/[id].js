@@ -24,36 +24,42 @@ function verifyAdmin(req) {
 }
 
 module.exports = async (req, res) => {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'DELETE') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  // Verify admin
-  const auth = verifyAdmin(req);
-  if (!auth.valid) {
-    return res.status(auth.status).json({ error: auth.error });
-  }
-
   try {
+    // Enable CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end();
+    }
+
+    if (req.method !== 'DELETE') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    // Verify admin
+    const auth = verifyAdmin(req);
+    if (!auth.valid) {
+      return res.status(auth.status).json({ error: auth.error });
+    }
+
     // Extract id from URL path (Vercel dynamic route)
     const urlParts = req.url.split('/');
     const id = urlParts[urlParts.length - 1];
+    
+    if (!id) {
+      return res.status(400).json({ error: 'Score ID is required' });
+    }
+    
     const data = await readLeaderboard();
-    data.scores = data.scores.filter(score => score.id !== id);
+    const scores = Array.isArray(data.scores) ? data.scores : [];
+    data.scores = scores.filter(score => score.id !== id);
     await writeLeaderboard(data);
     res.json({ message: 'Score deleted successfully' });
   } catch (error) {
     console.error('Error deleting score:', error);
-    res.status(500).json({ error: 'Failed to delete score' });
+    res.status(500).json({ error: 'Failed to delete score', details: error.message });
   }
 };
 
