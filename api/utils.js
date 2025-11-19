@@ -9,9 +9,9 @@ let memoryStore = { scores: [] };
 // Initialize Vercel KV if available
 let kv = null;
 try {
-  const { createClient } = require('@vercel/kv');
-  // Vercel automatically provides KV_URL, KV_REST_API_URL, KV_REST_API_TOKEN, etc.
+  // Only try to require if we're on Vercel (has the env vars)
   if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+    const { createClient } = require('@vercel/kv');
     kv = createClient({
       url: process.env.KV_REST_API_URL,
       token: process.env.KV_REST_API_TOKEN,
@@ -19,7 +19,7 @@ try {
   }
 } catch (e) {
   // Vercel KV not available or not configured, use memory store
-  console.log('Vercel KV not available, using memory store');
+  // This is fine - we'll use in-memory storage
 }
 
 // Read leaderboard data

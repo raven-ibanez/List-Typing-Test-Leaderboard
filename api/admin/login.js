@@ -20,7 +20,17 @@ module.exports = async (req, res) => {
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { password } = req.body || {};
+    // Parse body if it's a string (Vercel sometimes sends string bodies)
+    let body = req.body;
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch (e) {
+        return res.status(400).json({ error: 'Invalid request body' });
+      }
+    }
+    
+    const { password } = body || {};
     
     if (!password) {
       return res.status(400).json({ error: 'Password is required' });

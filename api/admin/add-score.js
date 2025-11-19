@@ -44,7 +44,17 @@ module.exports = async (req, res) => {
       return res.status(auth.status).json({ error: auth.error });
     }
 
-    const { name, wpm, accuracy } = req.body || {};
+    // Parse body if it's a string (Vercel sometimes sends string bodies)
+    let body = req.body;
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch (e) {
+        return res.status(400).json({ error: 'Invalid request body' });
+      }
+    }
+    
+    const { name, wpm, accuracy } = body || {};
     
     if (!name || wpm === undefined || accuracy === undefined) {
       return res.status(400).json({ error: 'Name, WPM, and accuracy are required' });
