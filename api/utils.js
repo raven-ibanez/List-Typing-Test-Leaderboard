@@ -7,19 +7,25 @@ const path = require('path');
 let memoryStore = { scores: [] };
 
 // Initialize Vercel KV if available
+// If KV is not set up, we'll use in-memory storage (data resets on each deployment)
 let kv = null;
-try {
-  // Only try to require if we're on Vercel (has the env vars)
-  if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+
+// Only try to use KV if environment variables are present
+if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+  try {
     const { createClient } = require('@vercel/kv');
     kv = createClient({
       url: process.env.KV_REST_API_URL,
       token: process.env.KV_REST_API_TOKEN,
     });
+    console.log('Vercel KV initialized');
+  } catch (e) {
+    // KV package not available or error initializing - use memory store
+    console.log('Vercel KV not available, using in-memory storage');
   }
-} catch (e) {
-  // Vercel KV not available or not configured, use memory store
-  // This is fine - we'll use in-memory storage
+} else {
+  // No KV environment variables - use memory store
+  console.log('Vercel KV not configured, using in-memory storage');
 }
 
 // Read leaderboard data
