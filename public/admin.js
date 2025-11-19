@@ -105,7 +105,17 @@ async function addScore() {
             body: JSON.stringify({ name, wpm, accuracy })
         });
         
-        const data = await response.json();
+        // Check if response has content before parsing JSON
+        const contentType = response.headers.get('content-type');
+        let data;
+        if (contentType && contentType.includes('application/json')) {
+            data = await response.json();
+        } else {
+            const text = await response.text();
+            console.error('Non-JSON response:', text);
+            showMessage('Server returned an error. Check console for details.', 'error');
+            return;
+        }
         
         if (response.ok) {
             showMessage(`Score added successfully for ${escapeHtml(name)}!`, 'success');
@@ -116,12 +126,13 @@ async function addScore() {
                 showMessage('Session expired. Please login again.', 'error');
                 logout();
             } else {
-                showMessage(data.error || 'Failed to add score', 'error');
+                showMessage(data.error || `Failed to add score (Status: ${response.status})`, 'error');
+                console.error('Add score error:', data);
             }
         }
     } catch (error) {
         console.error('Error adding score:', error);
-        showMessage('Error connecting to server', 'error');
+        showMessage(`Error connecting to server: ${error.message}`, 'error');
     }
 }
 
