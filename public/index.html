@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Test Leaderboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏆 Typing Test Leaderboard</h1>
+            <p class="subtitle">See where you rank among the best typists!</p>
+        </header>
+
+        <div class="search-section">
+            <input 
+                type="text" 
+                id="playerSearch" 
+                placeholder="Enter your name to check your rank..."
+                class="search-input"
+            >
+            <button onclick="checkRank()" class="btn btn-primary">Check Rank</button>
+        </div>
+
+        <div id="rankResult" class="rank-result"></div>
+
+        <div class="leaderboard-section">
+            <h2>Top Players</h2>
+            <div class="refresh-info">
+                <span>Auto-refreshes every 5 seconds</span>
+                <button onclick="refreshLeaderboard()" class="btn btn-small">Refresh Now</button>
+            </div>
+            <div id="leaderboard" class="leaderboard">
+                <div class="loading">Loading leaderboard...</div>
+            </div>
+        </div>
+
+        <footer>
+            <a href="admin.html" class="admin-link">Admin Dashboard</a>
+        </footer>
+    </div>
+
+    <script src="leaderboard.js"></script>
+</body>
+</html>
+
