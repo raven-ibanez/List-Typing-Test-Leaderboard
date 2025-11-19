@@ -1,4 +1,5 @@
-const API_URL = 'http://localhost:3000/api';
+// Use relative API URL for Vercel deployment, fallback to localhost for development
+const API_URL = window.location.origin + '/api';
 
 let refreshInterval;
 
